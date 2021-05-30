@@ -1,0 +1,12 @@
+/node_modules/
+/public/build/
+/dist/*/
+/vscode/
+.idea
+
+.DS_Store
+.env
+.env.development
+.env.production
+variables
+/tmp/themeWatchNotify

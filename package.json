@@ -1,0 +1,36 @@
+{
+  "name": "svelte-app",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "node -r dotenv/config build dotenv_config_path=.env.production",
+    "download": "theme download -d src --allow-live",
+    "dev": "node -r dotenv/config watch dotenv_config_path=.env.development",
+    "rollup": "rollup -c -w",
+    "theme-watch": "theme watch --notify=tmp/themeWatchNotify --allow-live",
+    "browser-sync": "browser-sync start --config bs-config.js"
+  },
+  "devDependencies": {
+    "@rollup/plugin-commonjs": "^17.0.0",
+    "@rollup/plugin-node-resolve": "^11.0.0",
+    "@shopify/theme-a11y": "^4.1.1",
+    "@shopify/theme-cart": "^4.1.1",
+    "@shopify/theme-currency": "^4.1.1",
+    "@shopify/theme-images": "^4.1.1",
+    "@shopify/theme-product": "^4.1.1",
+    "@shopify/theme-sections": "^4.1.1",
+    "autoprefixer": "^9.8.5",
+    "chokidar": "^3.5.1",
+    "es6-promise": "^4.2.8",
+    "postcss": "^8.2.15",
+    "postcss-import": "^12.0.1",
+    "rollup": "^2.3.4",
+    "rollup-plugin-postcss": "^4.0.0",
+    "rollup-plugin-terser": "^7.0.0",
+    "tailwindcss": "^2.1.2",
+    "unfetch": "^4.2.0"
+  },
+  "dependencies": {
+    "dotenv": "^9.0.2"
+  }
+}

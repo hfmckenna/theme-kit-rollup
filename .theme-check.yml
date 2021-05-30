@@ -1,0 +1,98 @@
+root: .
+
+require: []
+
+ignore:
+  - node_modules/*
+
+ConvertIncludeToRender:
+  enabled: true
+
+LiquidTag:
+  enabled: true
+  min_consecutive_statements: 4
+
+MissingTemplate:
+  enabled: true
+
+NestedSnippet:
+  enabled: true
+  max_nesting_level: 3
+
+RequiredLayoutThemeObject:
+  enabled: true
+
+SpaceInsideBraces:
+  enabled: true
+
+SyntaxError:
+  enabled: true
+
+TemplateLength:
+  enabled: true
+  max_length: 200
+  # Exclude content of {% schema %} in line count
+  exclude_schema: true
+
+UnknownFilter:
+  enabled: true
+
+UnusedAssign:
+  enabled: true
+
+UnusedSnippet:
+  enabled: true
+
+MatchingSchemaTranslations:
+  enabled: true
+
+MatchingTranslations:
+  enabled: true
+
+DefaultLocale:
+  enabled: true
+
+TranslationKeyExists:
+  enabled: true
+
+ValidHTMLTranslation:
+  enabled: true
+
+ValidJson:
+  enabled: true
+
+ValidSchema:
+  enabled: true
+
+MissingRequiredTemplateFiles:
+  enabled: true
+
+UndefinedObject:
+  enabled: true
+  exclude_snippets: true
+
+RequiredDirectories:
+  enabled: true
+
+DeprecatedFilter:
+  enabled: true
+
+MissingEnableComment:
+  enabled: true
+
+ParserBlockingJavaScript:
+  enabled: true
+
+AssetSizeJavaScript:
+  enabled: false
+  threshold_in_bytes: 10_000
+
+AssetSizeCSS:
+  enabled: false
+  threshold_in_bytes: 100_000
+
+ImgWidthAndHeight:
+  enabled: true
+
+RemoteAsset:
+  enabled: true
