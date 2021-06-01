@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "build": "node -r dotenv/config build dotenv_config_path=.env.production",
-    "download": "theme download -d src --allow-live",
+    "download": "node -r dotenv/config download dotenv_config_path=.env.$npm_config_env",
     "dev": "node -r dotenv/config watch dotenv_config_path=.env.development",
     "rollup": "rollup -c -w",
     "theme-watch": "theme watch --notify=tmp/themeWatchNotify --allow-live",
@@ -31,6 +31,7 @@
     "unfetch": "^4.2.0"
   },
   "dependencies": {
+    "@shopify/themekit": "^1.1.7",
     "dotenv": "^9.0.2"
   }
 }
