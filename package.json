@@ -25,6 +25,7 @@
     "postcss": "^8.2.15",
     "postcss-import": "^12.0.1",
     "rollup": "^2.3.4",
+    "rollup-plugin-delete": "^2.0.0",
     "rollup-plugin-postcss": "^4.0.0",
     "rollup-plugin-terser": "^7.0.0",
     "tailwindcss": "^2.1.2",

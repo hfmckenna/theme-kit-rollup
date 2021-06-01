@@ -2,6 +2,7 @@ import commonjs from "@rollup/plugin-commonjs";
 import {nodeResolve} from "@rollup/plugin-node-resolve";
 import {terser} from "rollup-plugin-terser";
 import postcss from "rollup-plugin-postcss";
+import del from 'rollup-plugin-delete';
 
 const production = !process.env.ROLLUP_WATCH;
 
@@ -28,6 +29,7 @@ export default [
             sourcemap: !production,
         },
         plugins: [
+            del({targets: ['dist/assets/theme.min.css', 'dist/assets/theme.css']}),
             postcss({
                     extract: true,
                     minimize: production,
@@ -47,6 +49,7 @@ export default [
             compact: production
         },
         plugins: [
+            del({targets: ['dist/assets/vendor.min.js', 'dist/assets/vendor.min.js.map', 'dist/assets/vendor.js', 'dist/assets/vendor.js.map']}),
             terser()
         ],
     },
@@ -54,9 +57,11 @@ export default [
         input: "src/scripts/theme.js",
         output: themeOutput,
         plugins: [
-            nodeResolve({
-                dedupe: ['@shopify/theme-a11y', '@shopify/theme-cart', '@shopify/theme-currency', '@shopify/theme-images', '@shopify/theme-product', '@shopify/theme-sections']
+            del({
+                targets: ['dist/assets/theme.min.js', 'dist/assets/theme.min.js.map', 'dist/assets/theme.js', 'dist/assets/theme.js.map'],
+                runOnce: !production
             }),
+            nodeResolve({}),
             commonjs({}),
         ],
     }
