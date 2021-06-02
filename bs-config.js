@@ -30,7 +30,7 @@ module.exports = {
     "watchOptions": {
         "ignoreInitial": true
     },
-    "proxy": `https://${process.env.THEMEKIT_STORE}?preview_theme_id=${process.env.THEMEKIT_THEME_ID}`,
+    "proxy": `https://${process.env.THEMEKIT_STORE}?preview_theme_id=${process.env.THEMEKIT_THEME_ID}&pb=0`,
     "port": 3000,
     "reloadDelay": 50,
     "reloadDebounce": 0,

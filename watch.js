@@ -4,34 +4,37 @@ const chokidar = require("chokidar")
 const path = require("path")
 const fs = require("fs")
 
-const themeSrcDirectories = [`${__dirname}/src/config/*.json`, `${__dirname}/src/locales/*.json`, `${__dirname}/src/snippets/*.liquid`, `${__dirname}/src/sections/*.liquid`, `${__dirname}/src/layout/*.liquid`, `${__dirname}/src/templates/*.liquid`]
-const liquidTargetDirectories = [`${__dirname}/dist/snippets`, `${__dirname}/dist/sections`, `${__dirname}/dist/layout`, `${__dirname}/dist/templates`, `${__dirname}/dist/config`, `${__dirname}/dist/locales`]
+try {
+    fs.rmdirSync(`${__dirname}/dist`, {recursive: true});
+    console.log(`${__dirname}/dist is deleted!`);
+} catch (err) {
+    console.error(`Error while deleting ${__dirname}/dist`);
+}
+
+const themeSrcDirectories = [`${__dirname}/src/config/*.json`, `${__dirname}/src/locales/*.json`, `${__dirname}/src/snippets/*.liquid`, `${__dirname}/src/sections/*.liquid`, `${__dirname}/src/layout/*.liquid`, `${__dirname}/src/templates/**/*.liquid`]
+const liquidTargetDirectories = [`${__dirname}/dist`, `${__dirname}/dist/snippets`, `${__dirname}/dist/sections`, `${__dirname}/dist/layout`, `${__dirname}/dist/templates`, `${__dirname}/dist/templates/customers`, `${__dirname}/dist/config`, `${__dirname}/dist/locales`]
 
 for (let dir of liquidTargetDirectories) {
-    fs.stat(dir, (error) => {
-        if (error) {
-            fs.mkdir(dir, (error) => {
-                if (error) {
-                    log(error)
-                } else {
-                    log(`Created ${dir}`)
-                }
-            })
+    if (!fs.existsSync(dir)) {
+        try {
+            fs.mkdirSync(dir)
+        } catch (error) {
+            console.error(error)
         }
-    })
+    }
 }
 
 const themeWatcher = chokidar.watch(themeSrcDirectories, {
     watch: true,
-    ignoreInitial: false,
+    ignoreInitial: true,
     awaitWriteFinish: {
-        stabilityThreshold: 500
+        stabilityThreshold: 100
     }
 });
 
 const assetsWatcher = chokidar.watch(['./src/assets/**/*'], {
     watch: true,
-    ignoreInitial: false,
+    ignoreInitial: true,
     awaitWriteFinish: {
         stabilityThreshold: 1000
     }
@@ -39,7 +42,7 @@ const assetsWatcher = chokidar.watch(['./src/assets/**/*'], {
 
 const iconWatcher = chokidar.watch('./src/icons/**/*.svg', {
     watch: true,
-    ignoreInitial: false,
+    ignoreInitial: true,
     awaitWriteFinish: {
         stabilityThreshold: 200
     }
@@ -52,28 +55,26 @@ const iconsDest = `${__dirname}/dist/snippets`;
 const log = console.log.bind(console);
 
 function copyFile(src, dest) {
-    // Check for existing hard link
-    if (fs.statSync(dest).ino !== fs.statSync(src).ino) {
+    if (!fs.existsSync(dest)) {
         // If the destination file doesn't exist
-        if (typeof fs.statSync(dest, {throwIfNoEntry: false}) === "undefined") {
-            try {
-                fs.linkSync(src, dest);
-                log(`${src} was out of sync and copied to ${dest}`);
-            } catch (error) {
-                log(error);
-            }
-        } else {
-            // Remove existing file and sync the new one
-            try {
-                fs.unlinkSync(dest);
-                fs.linkSync(src, dest);
-                log(`${dest} deleted and linked to new file from ${src}`);
-            } catch (error) {
-                log(error);
-            }
+        try {
+            fs.linkSync(src, dest);
+            log(`${src} didn't exist copied to ${dest}`);
+        } catch (error) {
+            log(error);
         }
-    } else {
+        // Check for existing hard link
+    } else if (fs.statSync(dest).ino === fs.statSync(src).ino) {
         log(`${dest} is linked so wasn't copied`);
+    } else {
+        // Remove existing file and sync the new one
+        try {
+            fs.unlinkSync(dest);
+            fs.linkSync(src, dest);
+            log(`${dest} deleted and linked to new file from ${src}`);
+        } catch (error) {
+            log(error);
+        }
     }
 }
 
@@ -107,9 +108,12 @@ function getFlatIconDest(pathName) {
 }
 
 function getParentAndFile(pathName) {
-    return `${liquidDest}/${path.basename(path.dirname(pathName))}/${path.basename(pathName)}`
+    if (path.basename(path.dirname(pathName)) !== 'customers') {
+        return `${liquidDest}/${path.basename(path.dirname(pathName))}/${path.basename(pathName)}`
+    } else {
+        return `${liquidDest}/templates/customers/${path.basename(pathName)}`
+    }
 }
-
 themeWatcher
     .on('add', filepath => copyFile(filepath, getParentAndFile(filepath)))
     .on('change', filepath => copyFile(filepath, getParentAndFile(filepath)))
