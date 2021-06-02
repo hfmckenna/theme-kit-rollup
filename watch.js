@@ -52,15 +52,28 @@ const iconsDest = `${__dirname}/dist/snippets`;
 const log = console.log.bind(console);
 
 function copyFile(src, dest) {
+    // Check for existing hard link
     if (fs.statSync(dest).ino !== fs.statSync(src).ino) {
-        try {
-            fs.linkSync(src, dest);
-            log(`${src} was out of sync and copied to ${dest}`);
-        } catch (error) {
-            log(error);
+        // If the destination file doesn't exist
+        if (typeof fs.statSync(dest, {throwIfNoEntry: false}) === "undefined") {
+            try {
+                fs.linkSync(src, dest);
+                log(`${src} was out of sync and copied to ${dest}`);
+            } catch (error) {
+                log(error);
+            }
+        } else {
+            // Remove existing file and sync the new one
+            try {
+                fs.unlinkSync(dest);
+                fs.linkSync(src, dest);
+                log(`${dest} deleted and linked to new file from ${src}`);
+            } catch (error) {
+                log(error);
+            }
         }
     } else {
-        log(`${dest} is up to date so wasn't copied`);
+        log(`${dest} is linked so wasn't copied`);
     }
 }
 
