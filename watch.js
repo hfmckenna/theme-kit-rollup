@@ -1,8 +1,12 @@
 'use strict'
-const cp = require("child_process")
-const chokidar = require("chokidar")
-const path = require("path")
-const fs = require("fs")
+const chokidar = require('chokidar')
+const path = require('path')
+const fs = require('fs')
+const loadConfigFile = require('rollup/dist/loadConfigFile')
+const rollup = require('rollup')
+const themeKit = require('@shopify/themekit')
+const bs = require('browser-sync').create()
+const bsConfig = require('./bs-config')
 
 try {
     fs.rmdirSync(`${__dirname}/dist`, {recursive: true});
@@ -114,6 +118,7 @@ function getParentAndFile(pathName) {
         return `${liquidDest}/templates/customers/${path.basename(pathName)}`
     }
 }
+
 themeWatcher
     .on('add', filepath => copyFile(filepath, getParentAndFile(filepath)))
     .on('change', filepath => copyFile(filepath, getParentAndFile(filepath)))
@@ -129,10 +134,38 @@ iconWatcher
     .on('change', filepath => copyIcon(filepath, getFlatIconDest(filepath)))
     .on('unlink', filepath => deleteFile(getFlatIconDest(filepath)));
 
-run("rollup");
-run("theme-watch");
-run("browser-sync");
+// load the config file next to the current script;
+// the provided config object has the same effect as passing "--format es"
+// on the command line and will override the format of all outputs
+loadConfigFile(path.resolve(__dirname, 'rollup.config.js')).then(
+    async ({options, warnings}) => {
+        // "warnings" wraps the default `onwarn` handler passed by the CLI.
+        // This prints all warnings up to this point:
+        console.log(`We currently have ${warnings.count} warnings`);
 
-function run(scriptName) {
-    cp.spawn("npm", ["run", scriptName], {stdio: "inherit"});
+        // This prints all deferred warnings
+        warnings.flush();
+        // options is an array of "inputOptions" objects with an additional "output"
+        // property that contains an array of "outputOptions".
+        // The following will generate all outputs for all inputs, and write them to disk the same
+        // way the CLI does it:
+        for (const optionsObj of options) {
+            const bundle = await rollup.rollup(optionsObj);
+            await Promise.all(optionsObj.output.map(bundle.write));
+        }
+
+        // You can also pass this directly to "rollup.watch"
+        rollup.watch(options);
+    }
+);
+
+if (!fs.existsSync(`${__dirname}/tmp`)) {
+    fs.mkdirSync(`${__dirname}/tmp`)
 }
+
+themeKit.command('watch', {
+    env: process.env.NODE_ENV,
+    notify: `${__dirname}/tmp/themeWatchNotify`,
+})
+
+bs.init(bsConfig)

@@ -1,10 +1,10 @@
 'use strict'
-const path = require("path")
-const fs = require("fs")
+const path = require('path')
+const fs = require('fs')
 const themeKit = require('@shopify/themekit')
 const loadConfigFile = require('rollup/dist/loadConfigFile')
 const rollup = require('rollup')
-const glob = require("glob")
+const glob = require('glob')
 
 try {
     fs.rmdirSync(`${__dirname}/dist`, {recursive: true});
@@ -122,6 +122,7 @@ loadConfigFile(path.resolve(__dirname, 'rollup.config.js'), {format: 'es'}).then
 
         themeKit.command('deploy', {
             env: process.env.NODE_ENV,
+            allowLive: process.env.NODE_ENV === 'production'
         })
         .catch(error => console.log(error))
     }
