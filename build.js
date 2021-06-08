@@ -122,7 +122,7 @@ loadConfigFile(path.resolve(__dirname, 'rollup.config.js'), {format: 'es'}).then
 
         themeKit.command('deploy', {
             env: process.env.NODE_ENV,
-            allowLive: process.env.NODE_ENV === 'production'
+            noDelete: true
         })
         .catch(error => console.log(error))
     }
