@@ -2,6 +2,7 @@ import commonjs from "@rollup/plugin-commonjs";
 import {nodeResolve} from "@rollup/plugin-node-resolve";
 import {terser} from "rollup-plugin-terser";
 import postcss from "rollup-plugin-postcss";
+import eslint from '@rollup/plugin-eslint';
 
 const production = process.env.NODE_ENV === 'production';
 
@@ -41,7 +42,6 @@ export default [
         output: themeOutput,
         plugins: [
             nodeResolve(),
-            commonjs()
         ],
     }
 ];
