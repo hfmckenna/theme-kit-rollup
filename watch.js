@@ -1,12 +1,15 @@
 'use strict'
+const nodeResolve = require("@rollup/plugin-node-resolve").nodeResolve;
 const chokidar = require('chokidar')
 const path = require('path')
 const fs = require('fs')
-const loadConfigFile = require('rollup/dist/loadConfigFile')
 const rollup = require('rollup')
 const themeKit = require('@shopify/themekit')
 const bs = require('browser-sync').create()
 const bsConfig = require('./bs-config')
+const postcss = require("rollup-plugin-postcss")
+
+const production = process.env.NODE_ENV === 'production';
 
 try {
     fs.rmdirSync(`${__dirname}/dist`, {recursive: true});
@@ -42,6 +45,19 @@ function init() {
     const themeWatcher = chokidar.watch(['./src/icons/*.svg', ...themeSrcDirectories], {
         watch: true,
         ignoreInitial: false
+    });
+
+    const rollupWatcher = chokidar.watch('./src/scripts/**/*.js', {
+        watch: true,
+        ignoreInitial: true
+    });
+
+    const styleWatcher = chokidar.watch('./src/styles/**/*.css', {
+        watch: true,
+        ignoreInitial: true,
+        awaitWriteFinish: {
+            stabilityThreshold: 2000
+        }
     });
 
     const distWatcher = chokidar.watch('./dist/**/*', {
@@ -170,12 +186,14 @@ function init() {
                     env: process.env.NODE_ENV,
                     files: dirObj.dirs,
                 })
+                bs.reload()
             }
             if (dirObj.event === 'remove' && dirObj.dirs.length > 0) {
                 await themeKit.command('remove', {
                     env: process.env.NODE_ENV,
                     files: dirObj.dirs,
                 })
+                bs.reload()
             }
         }
     }
@@ -190,58 +208,76 @@ function init() {
         .on('change', filepath => copyFile(filepath, getFlatDest(filepath)))
         .on('unlink', filepath => deleteFile(getFlatDest(filepath)));
 
+    rollupWatcher
+        .on('all', build)
+
+    styleWatcher
+        .on('all', styles)
+
     distWatcher
         .on('all', handleFiles)
 
-// load the config file next to the current script;
-// the provided config object has the same effect as passing "--format es"
-// on the command line and will override the format of all outputs
-    loadConfigFile(path.resolve(__dirname, 'rollup.config.js')).then(
-        async ({options, warnings}) => {
-            // "warnings" wraps the default `onwarn` handler passed by the CLI.
-            // This prints all warnings up to this point:
-            console.log(`We currently have ${warnings.count} warnings`);
+    async function build() {
+        // create a bundle
+        const bundle = await rollup.rollup({
+            input: "./src/scripts/theme.js", plugins: [
+                nodeResolve(),
+            ]
+        });
 
-            // This prints all deferred warnings
-            warnings.flush();
-            // options is an array of "inputOptions" objects with an additional "output"
-            // property that contains an array of "outputOptions".
-            // The following will generate all outputs for all inputs, and write them to disk the same
-            // way the CLI does it:
+        console.log(bundle.watchFiles); // an array of file names this bundle depends on
 
-            try {
+        // or write the bundle to disk
+        await bundle.write({
+            file: 'dist/assets/theme.js',
+            sourcemap: true,
+            format: 'iife',
+        });
 
-                for (const optionsObj of options) {
-                    const bundle = await rollup.rollup(optionsObj);
-                    await Promise.all(optionsObj.output.map(bundle.write));
-                }
+        // closes the bundle
+        await bundle.close();
+    }
 
-                // You can also pass this directly to "rollup.watch"
-                rollup.watch(options)
-                console.log('Rollup Watching...')
-            } catch (error) {
-                console.log(error)
-            }
+    async function styles(event) {
+        // create a bundle
+        console.log(event)
+        try {
+            const bundle = await rollup.rollup({
+                input: "src/styles/theme.css",
+                plugins: [
+                    postcss({
+                            extract: true,
+                            minimize: production,
+                            sourceMap: !production,
+                            config: {
+                                path: './postcss.config.js'
+                            }
+                        }
+                    ),
+                ]
+            });
+
+            console.log(bundle.watchFiles); // an array of file names this bundle depends on
+
+            // or write the bundle to disk
+            await bundle.write({
+                file: "dist/assets/theme.css"
+            });
+
+            // closes the bundle
+            await bundle.close();
+            bs.reload()
+
+        } catch (error) {
+            throw new Error(error)
         }
-    );
+    }
+
 
     if (!fs.existsSync(`${__dirname}/tmp`)) {
         fs.mkdirSync(`${__dirname}/tmp`)
     }
 
-    function uploadFile(files) {
-        themeKit.command('deploy', {
-            env: process.env.NODE_ENV,
-            files: files,
-        })
-    }
-
-    function removeFile(files) {
-        themeKit.command('remove', {
-            env: process.env.NODE_ENV,
-            files: files,
-        })
-    }
-
     bs.init(bsConfig);
+
 }
